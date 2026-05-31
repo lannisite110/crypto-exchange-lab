@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/crypto-exchange-lab/go-common/config"
+	"github.com/crypto-exchange-lab/go-common/cors"
 	"github.com/crypto-exchange-lab/go-common/httputil"
 	"github.com/crypto-exchange-lab/go-common/logger"
 	"github.com/crypto-exchange-lab/go-common/metrics"
@@ -49,9 +50,9 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTPPort),
-		Handler:      metrics.Wrap(cfg.ServiceName, mux),
+		Handler:      metrics.Wrap(cfg.ServiceName, cors.Middleware(mux)),
 		ReadTimeout:  config.HTTPReadTimeout(),
-		WriteTimeout: config.HTTPWriteTimeout(),
+		WriteTimeout: 0, // WebSocket /ws/v1/market must stay open
 	}
 
 	go func() {
