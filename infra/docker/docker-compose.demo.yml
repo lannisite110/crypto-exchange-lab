@@ -1,0 +1,228 @@
+# Full backend demo stack (Phase 6 deploy). Use with base compose:
+#   ./scripts/deploy-demo.sh
+# Or: docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.demo.yml up -d --build
+
+x-go-build: &go-build
+  context: ../..
+  dockerfile: infra/deploy/Dockerfile.go-service
+
+x-go-env: &go-env
+  DATABASE_URL: postgres://lab:lab@postgres:5432/crypto_exchange_lab?sslmode=disable
+  LOG_LEVEL: info
+
+services:
+  migrate:
+    image: postgres:16-alpine
+    container_name: cel-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: lab
+      PGPASSWORD: lab
+      PGDATABASE: crypto_exchange_lab
+    volumes:
+      - ../postgres/migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        for f in /migrations/*.up.sql; do
+          echo "Applying $$f"
+          psql -v ON_ERROR_STOP=1 -f "$$f"
+        done
+        echo "Migrations done."
+    restart: "no"
+
+  account-service:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: account-service
+    container_name: cel-account
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      ACCOUNT_SERVICE_HTTP_PORT: "8081"
+    ports:
+      - "8081:8081"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  matching-engine:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: matching-engine
+    container_name: cel-matching
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      MATCHING_ENGINE_HTTP_PORT: "8083"
+      MATCHING_SEED_BOOKS: "true"
+    ports:
+      - "8083:8083"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  order-service:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: order-service
+    container_name: cel-order
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      ORDER_SERVICE_HTTP_PORT: "8082"
+      ACCOUNT_SERVICE_URL: http://account-service:8081
+      MATCHING_ENGINE_URL: http://matching-engine:8083
+    ports:
+      - "8082:8082"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      account-service:
+        condition: service_started
+      matching-engine:
+        condition: service_started
+
+  orderbook-dex:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: orderbook-dex
+    container_name: cel-orderbook-dex
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      ORDERBOOK_DEX_HTTP_PORT: "8084"
+      ACCOUNT_SERVICE_URL: http://account-service:8081
+      MATCHING_ENGINE_URL: http://matching-engine:8083
+    ports:
+      - "8084:8084"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      account-service:
+        condition: service_started
+      matching-engine:
+        condition: service_started
+
+  hyperliquid-engine:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: hyperliquid-engine
+    container_name: cel-hyperliquid
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      HYPERLIQUID_ENGINE_HTTP_PORT: "8085"
+      ACCOUNT_SERVICE_URL: http://account-service:8081
+      MATCHING_ENGINE_URL: http://matching-engine:8083
+    ports:
+      - "8085:8085"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      account-service:
+        condition: service_started
+      matching-engine:
+        condition: service_started
+
+  risk-engine:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: risk-engine
+    container_name: cel-risk
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      RISK_ENGINE_HTTP_PORT: "8086"
+      ACCOUNT_SERVICE_URL: http://account-service:8081
+    ports:
+      - "8086:8086"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  liquidation-engine:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: liquidation-engine
+    container_name: cel-liquidation
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      LIQUIDATION_ENGINE_HTTP_PORT: "8087"
+      HYPERLIQUID_ENGINE_URL: http://hyperliquid-engine:8085
+    ports:
+      - "8087:8087"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      hyperliquid-engine:
+        condition: service_started
+
+  funding-engine:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: funding-engine
+    container_name: cel-funding
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      FUNDING_ENGINE_HTTP_PORT: "8088"
+      ACCOUNT_SERVICE_URL: http://account-service:8081
+      FUNDING_INTERVAL: 5m
+      FUNDING_RATE: "0.0001"
+    ports:
+      - "8088:8088"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      account-service:
+        condition: service_started
+
+  rpc-gateway:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: rpc-gateway
+    container_name: cel-rpc-gateway
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      RPC_GATEWAY_HTTP_PORT: "8089"
+    ports:
+      - "8089:8089"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  indexer:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: indexer
+    container_name: cel-indexer
+    restart: unless-stopped
+    environment:
+      <<: *go-env
+      INDEXER_HTTP_PORT: "8090"
+      INDEXER_CHAIN: sepolia
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://rpc.sepolia.org}
+      INDEXER_POLL_INTERVAL: 12s
+      INDEXER_BATCH_SIZE: "8"
+    ports:
+      - "8090:8090"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully

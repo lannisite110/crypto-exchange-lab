@@ -1,0 +1,24 @@
+{
+  "name": "crypto-exchange-lab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Crypto Exchange Lab — simulated DEX, CEX, and perpetual futures for learning and portfolio",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "contracts:test": "pnpm --filter @crypto-exchange-lab/contracts test",
+    "contracts:compile": "pnpm --filter @crypto-exchange-lab/contracts compile",
+    "contracts:deploy:local": "pnpm --filter @crypto-exchange-lab/contracts deploy:local",
+    "contracts:deploy:sepolia": "pnpm --filter @crypto-exchange-lab/contracts deploy:sepolia"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

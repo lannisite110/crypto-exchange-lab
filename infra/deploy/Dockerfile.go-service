@@ -1,0 +1,17 @@
+# Build: docker build -f infra/deploy/Dockerfile.go-service --build-arg SERVICE=account-service -t cel-account .
+FROM golang:1.22-alpine AS build
+ARG SERVICE=account-service
+RUN apk add --no-cache git
+WORKDIR /src
+COPY go.work go.work.sum ./
+COPY packages ./packages
+COPY services ./services
+WORKDIR /src/services/${SERVICE}
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server ./cmd/server
+
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates
+COPY --from=build /app/server /server
+ENV LOG_LEVEL=info
+EXPOSE 8080
+CMD ["/server"]

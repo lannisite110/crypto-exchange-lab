@@ -1,0 +1,22 @@
+app = "cel-liquidation"
+primary_region = "sin"
+
+[build]
+  dockerfile = "../Dockerfile.go-service"
+  [build.args]
+    SERVICE = "liquidation-engine"
+
+[env]
+  LIQUIDATION_ENGINE_HTTP_PORT = "8087"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 8087
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

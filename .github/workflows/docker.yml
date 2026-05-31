@@ -1,0 +1,24 @@
+name: Docker build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  go-service-image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - account-service
+          - matching-engine
+          - order-service
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: |
+          docker build -f infra/deploy/Dockerfile.go-service \
+            --build-arg SERVICE=${{ matrix.service }} \
+            -t cel-${{ matrix.service }}:ci .

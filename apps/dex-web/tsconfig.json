@@ -1,0 +1,17 @@
+{
+  "extends": "../shared-next/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "../shared-next/next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ]
+}

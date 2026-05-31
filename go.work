@@ -1,0 +1,25 @@
+go 1.22
+
+use (
+	./packages/go-common
+	./packages/matching
+	./packages/orderapi
+	./packages/orderflow
+	./packages/orderstore
+	./packages/perps
+	./packages/perpservice
+	./packages/perpstore
+	./packages/tradeclients
+	./packages/chainrpc
+	./packages/chainstore
+	./services/account-service
+	./services/funding-engine
+	./services/hyperliquid-engine
+	./services/liquidation-engine
+	./services/matching-engine
+	./services/order-service
+	./services/orderbook-dex
+	./services/risk-engine
+	./services/rpc-gateway
+	./services/indexer
+)

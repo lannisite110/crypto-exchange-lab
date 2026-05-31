@@ -1,0 +1,21 @@
+{
+  "name": "@crypto-exchange-lab/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "hardhat compile",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "lint": "hardhat compile",
+    "clean": "hardhat clean",
+    "deploy:local": "hardhat run scripts/deploy-amm.ts --network hardhat",
+    "deploy:sepolia": "hardhat run scripts/deploy-amm.ts --network sepolia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.17"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0"
+  }
+}

@@ -1,0 +1,25 @@
+app = "cel-indexer"
+primary_region = "sin"
+
+[build]
+  dockerfile = "../Dockerfile.go-service"
+  [build.args]
+    SERVICE = "indexer"
+
+[env]
+  INDEXER_HTTP_PORT = "8090"
+  INDEXER_CHAIN = "sepolia"
+  INDEXER_POLL_INTERVAL = "12s"
+  INDEXER_BATCH_SIZE = "8"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 8090
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

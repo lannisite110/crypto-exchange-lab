@@ -1,0 +1,24 @@
+app = "cel-funding"
+primary_region = "sin"
+
+[build]
+  dockerfile = "../Dockerfile.go-service"
+  [build.args]
+    SERVICE = "funding-engine"
+
+[env]
+  FUNDING_ENGINE_HTTP_PORT = "8088"
+  FUNDING_INTERVAL = "5m"
+  FUNDING_RATE = "0.0001"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 8088
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
