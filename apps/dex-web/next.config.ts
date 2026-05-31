@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
         dir,
         "lib/stub-async-storage.ts"
       ),
+      "pino-pretty": path.join(dir, "lib/stub-pino-pretty.ts"),
     };
     return config;
   },
