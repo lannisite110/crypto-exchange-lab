@@ -69,8 +69,12 @@ export type WatchedContract = {
 
 const CHAIN = "sepolia";
 
+function list<T>(v: T[] | null | undefined): T[] {
+  return v ?? [];
+}
+
 export function fetchChains() {
-  return get<{ chains: Chain[] }>("/api/v1/chains").then((d) => d.chains);
+  return get<{ chains: Chain[] }>("/api/v1/chains").then((d) => list(d.chains));
 }
 
 export function fetchStatus(chain = CHAIN) {
@@ -79,7 +83,7 @@ export function fetchStatus(chain = CHAIN) {
 
 export function fetchBlocks(chain = CHAIN, limit = 15) {
   return get<{ blocks: Block[] }>(`/api/v1/chains/${chain}/blocks?limit=${limit}`).then(
-    (d) => d.blocks
+    (d) => list(d.blocks)
   );
 }
 
@@ -90,7 +94,7 @@ export function fetchBlock(chain: string, number: number) {
 export function fetchBlockTxs(chain: string, number: number) {
   return get<{ transactions: Transaction[] }>(
     `/api/v1/chains/${chain}/blocks/${number}/transactions`
-  ).then((d) => d.transactions);
+  ).then((d) => list(d.transactions));
 }
 
 export function fetchTx(chain: string, hash: string) {
@@ -100,7 +104,7 @@ export function fetchTx(chain: string, hash: string) {
 export function fetchAddressTxs(chain: string, addr: string, limit = 20) {
   return get<{ transactions: Transaction[] }>(
     `/api/v1/chains/${chain}/addresses/${addr}/transactions?limit=${limit}`
-  ).then((d) => d.transactions);
+  ).then((d) => list(d.transactions));
 }
 
 export function fetchBalance(chain: string, addr: string) {
@@ -111,13 +115,13 @@ export function fetchEvents(chain = CHAIN, type?: string, limit = 25) {
   const q = new URLSearchParams({ limit: String(limit) });
   if (type) q.set("type", type);
   return get<{ events: ChainEvent[] }>(`/api/v1/chains/${chain}/events?${q}`).then(
-    (d) => d.events
+    (d) => list(d.events)
   );
 }
 
 export function fetchContracts(chain = CHAIN) {
   return get<{ contracts: WatchedContract[] }>(`/api/v1/chains/${chain}/contracts`).then(
-    (d) => d.contracts
+    (d) => list(d.contracts)
   );
 }
 

@@ -44,9 +44,9 @@ export default function ExplorerPage() {
         fetchContracts(),
       ]);
       setStatus(st);
-      setBlocks(bl);
-      setEvents(ev);
-      setContracts(ct);
+      setBlocks(bl ?? []);
+      setEvents(ev ?? []);
+      setContracts(ct ?? []);
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "load failed");
@@ -165,7 +165,7 @@ export default function ExplorerPage() {
                 </tr>
               </thead>
               <tbody>
-                {blocks.map((b) => (
+                {(blocks ?? []).map((b) => (
                   <tr
                     key={b.number}
                     className={selectedBlock === b.number ? "selected" : ""}
@@ -216,7 +216,7 @@ export default function ExplorerPage() {
               </tr>
             </thead>
             <tbody>
-              {events.map((ev) => (
+              {(events ?? []).map((ev) => (
                 <tr key={ev.id}>
                   <td>{ev.block_number}</td>
                   <td className="mono">{short(ev.tx_hash)}</td>
@@ -260,7 +260,7 @@ export default function ExplorerPage() {
             <div className="result">
               <p>Balance (wei): {searchResult.balance}</p>
               <ul className="tx-list">
-                {searchResult.txs.map((t) => (
+                {(searchResult.txs ?? []).map((t) => (
                   <li key={t.hash}>
                     {short(t.hash)} — block {t.block_number}
                   </li>
