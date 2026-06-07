@@ -73,6 +73,9 @@ func (e *Engine) Open(ctx context.Context, req OpenRequest) (*perpstore.Position
 
 	mark, err := e.Store.GetMarkPrice(ctx, req.Symbol)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apperrors.New(apperrors.CodeInvalidArgument, "mark price not ready; wait for matching feed")
+		}
 		return nil, err
 	}
 
@@ -91,13 +94,13 @@ func (e *Engine) Open(ctx context.Context, req OpenRequest) (*perpstore.Position
 	}
 
 	posID := uuid.New().String()
-	refID := posID
 	if existing != nil {
 		posID = existing.ID
-		refID = existing.ID
 	}
+	// Unique per freeze; ledger (ref_type, ref_id) must not reuse position id on add.
+	freezeRefID := uuid.New().String()
 
-	if err := e.Account.Freeze(ctx, refTypePerpMargin, req.UserID, mkt.QuoteAsset, money.Format(addMargin), refID); err != nil {
+	if err := e.Account.Freeze(ctx, refTypePerpMargin, req.UserID, mkt.QuoteAsset, money.Format(addMargin), freezeRefID); err != nil {
 		return nil, err
 	}
 
@@ -118,7 +121,7 @@ func (e *Engine) Open(ctx context.Context, req OpenRequest) (*perpstore.Position
 	}
 
 	if err := e.Store.UpsertPosition(ctx, pos); err != nil {
-		_ = e.Account.Unfreeze(ctx, refTypePerpMargin, req.UserID, mkt.QuoteAsset, money.Format(addMargin), refID)
+		_ = e.Account.Unfreeze(ctx, refTypePerpMargin, req.UserID, mkt.QuoteAsset, money.Format(addMargin), freezeRefID)
 		return nil, err
 	}
 
